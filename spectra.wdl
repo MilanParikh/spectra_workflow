@@ -7,7 +7,7 @@ workflow spectra {
         String cell_type_key = 'broad_clusters'
         Boolean use_hvgs = true
         Boolean use_weights = true
-        Float lambda = 0.01
+        Float lam = 0.01
         Float delta = 0.001
         Float kappa = 0.00001
         Float rho = 0.00001
@@ -31,7 +31,7 @@ workflow spectra {
             cell_type_key = cell_type_key,
             use_hvgs = use_hvgs,
             use_weights = use_weights,
-            lambda = lambda,
+            lam = lam,
             delta = delta,
             kappa = kappa,
             rho = rho,
@@ -59,7 +59,7 @@ task run_spectra_model {
         String cell_type_key
         Boolean use_hvgs
         Boolean use_weights
-        Float lambda
+        Float lam
         Float delta
         Float kappa
         Float rho
@@ -96,7 +96,7 @@ task run_spectra_model {
         cell_type_key = "~{cell_type_key}"
         use_hvgs = ~{true='True' false='False' use_hvgs}
         use_weights = ~{true='True' false='False' use_weights}
-        lambda = ~{lambda}
+        lam = ~{lam}
         delta = ~{delta}
         kappa = ~{kappa}
         rho = ~{rho}
@@ -106,7 +106,7 @@ task run_spectra_model {
 
         model = spc.est_spectra(adata = adata, gene_set_dictionary = annotations, 
                         use_highly_variable = use_hvgs, cell_type_key = cell_type_key, 
-                        use_weights = use_weights, lam = lambda, 
+                        use_weights = use_weights, lam = lam, 
                         delta=delta, kappa = kappa, rho = rho, 
                         use_cell_types = use_cell_types, n_top_vals = n_top_vals, 
                         num_epochs=num_epochs
