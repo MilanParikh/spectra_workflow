@@ -23,10 +23,11 @@ workflow spectra {
 
     String output_directory_stripped = sub(output_directory, "/+$", "")
 
-    call run_statistical_analysis {
+    call run_spectra_model {
         input:
             output_dir = output_directory_stripped,
             anndata_file = anndata_file,
+            gene_dict_json_file = gene_dict_json_file,
             cell_type_key = cell_type_key,
             use_hvgs = use_hvgs,
             use_weights = use_weights,
@@ -44,11 +45,12 @@ workflow spectra {
     }
 
     output {
-        
+        File spectra_anndata_file = run_spectra_model.spectra_anndata_file
+        File spectra_model_file = run_spectra_model.spectra_model_file
     }
 }
 
-task run_statistical_analysis {
+task run_spectra_model {
 
     input {
         String output_dir
