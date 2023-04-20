@@ -17,6 +17,7 @@ workflow spectra {
         #general parameters
         Int cpu = 8
         String memory = "64G"
+        Int extra_disk_space = 0
         String docker = "mparikhbroad/spectra:latest"
         Int preemptible = 2
     }
@@ -40,6 +41,7 @@ workflow spectra {
             num_epochs = num_epochs,
             cpu=cpu,
             memory=memory,
+            extra_disk_space = extra_disk_space,
             docker=docker,
             preemptible=preemptible
     }
@@ -67,6 +69,7 @@ task run_spectra_model {
         Int n_top_vals
         Int num_epochs
         String memory
+        Int extra_disk_space
         Int cpu
         String docker
         Int preemptible
@@ -131,7 +134,7 @@ task run_spectra_model {
         docker: docker
         memory: memory
         bootDiskSizeGb: 12
-        disks: "local-disk " + ceil(size(anndata_file, "GB")*2) + " HDD"
+        disks: "local-disk " + (ceil(size(anndata_file, "GB")*4) + extra_disk_space) + " HDD"
         cpu: cpu
         preemptible: preemptible
     }
