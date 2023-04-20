@@ -118,7 +118,7 @@ task run_spectra_model {
         with open('outputs/spectra_model.pickle', 'wb') as f:
             pickle.dump(model, f, pickle.HIGHEST_PROTOCOL)
 
-        adata.write('/outputs/spectra_adata.h5ad')
+        adata.write('outputs/spectra_adata.h5ad')
 
         CODE
 
