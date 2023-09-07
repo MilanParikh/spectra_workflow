@@ -18,6 +18,7 @@ workflow spectra {
         Boolean use_gpu = false
         String gpuType = "nvidia-tesla-p100"
         Int gpuCount = 0
+        String nvidiaDriverVersion = "450.80.02"
         Int cpu = 4
         Int memory = 16
         Int extra_disk_space = 0
@@ -50,6 +51,7 @@ workflow spectra {
             use_gpu = use_gpu,
             gpuCount = gpuCount,
             gpuType = gpuType,
+            nvidiaDriverVersion = nvidiaDriverVersion,
             preemptible=preemptible,
             zones = zones
     }
@@ -82,6 +84,7 @@ task run_spectra_model {
         Boolean use_gpu
         Int gpuCount
         String gpuType
+        String nvidiaDriverVersion
         String docker
         Int preemptible
         Array[String] zones
@@ -183,6 +186,7 @@ task run_spectra_model {
         gpu: use_gpu
         gpuType: gpuType
         gpuCount: gpuCount
+        nvidiaDriverVersion: nvidiaDriverVersion
         preemptible: preemptible
         zones: zones
     }

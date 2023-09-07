@@ -14,5 +14,6 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.c
 
 # install CellphoneDB
 RUN pip3 install git+https://github.com/dpeerlab/spectra.git --no-cache-dir
+RUN pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
