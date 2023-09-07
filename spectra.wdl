@@ -108,16 +108,16 @@ task run_spectra_model {
         # check if gpu is detected
         # Check if CUDA is available
         if torch.cuda.is_available():
-            print("CUDA is available")
+            print("CUDA is available", flush=True)
 
             # Get the number of available GPUs
             num_gpus = torch.cuda.device_count()
-            print(f"Number of available GPUs: {num_gpus}")
+            print(f"Number of available GPUs: {num_gpus}", flush=True)
 
             # Get the name and memory status of each available GPU
             for i in range(num_gpus):
                 gpu_name = torch.cuda.get_device_name(i)
-                print(f"GPU {i}: {gpu_name}")
+                print(f"GPU {i}: {gpu_name}", flush=True)
 
                 # Get the memory information
                 gpu_memory = torch.cuda.get_device_properties(i).total_memory
@@ -128,14 +128,18 @@ task run_spectra_model {
                 print(f"\tTotal Memory: {gpu_memory / 1024**3:.2f} GB")
                 print(f"\tAllocated Memory: {gpu_memory_allocated / 1024**3:.2f} GB")
                 print(f"\tCached Memory: {gpu_memory_cached / 1024**3:.2f} GB")
-                print(f"\tFree Memory: {gpu_memory_free / 1024**3:.2f} GB")
+                print(f"\tFree Memory: {gpu_memory_free / 1024**3:.2f} GB", flush=True)
         else:
-            print("CUDA is not available")
+            print("CUDA is not available", flush=True)
 
         with open("~{gene_dict_json_file}", 'rb') as file:
             annotations = json.load(file)
 
+        print("reading anndata", flush=True)
+
         adata = sc.read_h5ad("~{anndata_file}")
+
+        print("starting spectra", flush=True)
         cell_type_key = "~{cell_type_key}"
         use_hvgs = ~{true='True' false='False' use_hvgs}
         use_weights = ~{true='True' false='False' use_weights}
