@@ -15,11 +15,15 @@ workflow spectra {
         Int n_top_vals = 25
         Int num_epochs = 10000
         #general parameters
-        Int cpu = 8
-        String memory = "64G"
+        Boolean use_gpu = false
+        String gpuType = "nvidia-tesla-p100"
+        Int gpuCount = 0
+        Int cpu = 4
+        Int memory = 16
         Int extra_disk_space = 0
-        String docker = "mparikhbroad/spectra:latest"
+        String docker = "us.gcr.io/landerlab-atacseq-200218/mehta_spectra:latest"
         Int preemptible = 2
+        Array[String] zones = ["us-central1-c"]
     }
 
     String output_directory_stripped = sub(output_directory, "/+$", "")
@@ -43,7 +47,11 @@ workflow spectra {
             memory=memory,
             extra_disk_space = extra_disk_space,
             docker=docker,
-            preemptible=preemptible
+            use_gpu = use_gpu,
+            gpuCount = gpuCount,
+            gpuType = gpuType,
+            preemptible=preemptible,
+            zones = zones
     }
 
     output {
@@ -68,11 +76,15 @@ task run_spectra_model {
         Boolean use_cell_types
         Int n_top_vals
         Int num_epochs
-        String memory
+        Int memory
         Int extra_disk_space
         Int cpu
+        Boolean use_gpu
+        Int gpuCount
+        String gpuType
         String docker
         Int preemptible
+        Array[String] zones
     }
 
     command <<<
@@ -88,9 +100,37 @@ task run_spectra_model {
         import json
         import scipy
         import pickle
-        from spectra import spectra as spc
+        from spectra import spectra_gpu as spc
         from spectra import spectra_util as util
         from spectra import K_est as kst
+        import torch
+
+        # check if gpu is detected
+        # Check if CUDA is available
+        if torch.cuda.is_available():
+            print("CUDA is available")
+
+            # Get the number of available GPUs
+            num_gpus = torch.cuda.device_count()
+            print(f"Number of available GPUs: {num_gpus}")
+
+            # Get the name and memory status of each available GPU
+            for i in range(num_gpus):
+                gpu_name = torch.cuda.get_device_name(i)
+                print(f"GPU {i}: {gpu_name}")
+
+                # Get the memory information
+                gpu_memory = torch.cuda.get_device_properties(i).total_memory
+                gpu_memory_allocated = torch.cuda.memory_allocated(i)
+                gpu_memory_cached = torch.cuda.memory_cached(i)
+                gpu_memory_free = gpu_memory - gpu_memory_allocated - gpu_memory_cached
+
+                print(f"\tTotal Memory: {gpu_memory / 1024**3:.2f} GB")
+                print(f"\tAllocated Memory: {gpu_memory_allocated / 1024**3:.2f} GB")
+                print(f"\tCached Memory: {gpu_memory_cached / 1024**3:.2f} GB")
+                print(f"\tFree Memory: {gpu_memory_free / 1024**3:.2f} GB")
+        else:
+            print("CUDA is not available")
 
         with open("~{gene_dict_json_file}", 'rb') as file:
             annotations = json.load(file)
@@ -132,11 +172,15 @@ task run_spectra_model {
 
     runtime {
         docker: docker
-        memory: memory
+        memory: "~{memory}GB"
         bootDiskSizeGb: 12
         disks: "local-disk " + (ceil(size(anndata_file, "GB")*4) + extra_disk_space) + " HDD"
         cpu: cpu
+        gpu: use_gpu
+        gpuType: gpuType
+        gpuCount: gpuCount
         preemptible: preemptible
+        zones: zones
     }
 
 }
