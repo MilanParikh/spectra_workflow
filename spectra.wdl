@@ -14,6 +14,7 @@ workflow spectra {
         Boolean use_cell_types = true
         Int n_top_vals = 25
         Int num_epochs = 10000
+        Int batch_size = 1000
         #general parameters
         Boolean use_gpu = false
         String gpuType = "nvidia-tesla-p100"
@@ -44,6 +45,7 @@ workflow spectra {
             use_cell_types = use_cell_types,
             n_top_vals = n_top_vals,
             num_epochs = num_epochs,
+            batch_size = batch_size,
             cpu=cpu,
             memory=memory,
             extra_disk_space = extra_disk_space,
@@ -78,6 +80,7 @@ task run_spectra_model {
         Boolean use_cell_types
         Int n_top_vals
         Int num_epochs
+        Int batch_size
         Int memory
         Int extra_disk_space
         Int cpu
@@ -153,13 +156,14 @@ task run_spectra_model {
         use_cell_types = ~{true='True' false='False' use_cell_types}
         n_top_vals = ~{n_top_vals}
         num_epochs = ~{num_epochs}
+        batch_size = ~{batch_size}
 
         model = spc.est_spectra(adata = adata, gene_set_dictionary = annotations, 
                         use_highly_variable = use_hvgs, cell_type_key = cell_type_key, 
                         use_weights = use_weights, lam = lam, 
                         delta=delta, kappa = kappa, rho = rho, 
                         use_cell_types = use_cell_types, n_top_vals = n_top_vals, 
-                        num_epochs=num_epochs
+                        num_epochs=num_epochs, batch_size=batch_size
                        )
 
         with open('outputs/spectra_model.pickle', 'wb') as f:
