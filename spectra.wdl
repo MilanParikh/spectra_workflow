@@ -4,7 +4,7 @@ workflow spectra {
     	String output_directory
         File anndata_file
         File gene_dict_json_file
-        String cell_type_key = 'broad_clusters'
+        String cell_type_key = 'mid_level_annotations'
         Boolean use_hvgs = true
         Boolean use_weights = true
         Float lam = 0.01
@@ -14,12 +14,7 @@ workflow spectra {
         Boolean use_cell_types = true
         Int n_top_vals = 25
         Int num_epochs = 10000
-        Int batch_size = 1000
         #general parameters
-        Boolean use_gpu = false
-        String gpuType = "nvidia-tesla-p100"
-        Int gpuCount = 0
-        String nvidiaDriverVersion = "450.80.02"
         Int cpu = 4
         Int memory = 16
         Int extra_disk_space = 0
@@ -45,15 +40,10 @@ workflow spectra {
             use_cell_types = use_cell_types,
             n_top_vals = n_top_vals,
             num_epochs = num_epochs,
-            batch_size = batch_size,
             cpu=cpu,
             memory=memory,
             extra_disk_space = extra_disk_space,
             docker=docker,
-            use_gpu = use_gpu,
-            gpuCount = gpuCount,
-            gpuType = gpuType,
-            nvidiaDriverVersion = nvidiaDriverVersion,
             preemptible=preemptible,
             zones = zones
     }
@@ -80,14 +70,9 @@ task run_spectra_model {
         Boolean use_cell_types
         Int n_top_vals
         Int num_epochs
-        Int batch_size
         Int memory
         Int extra_disk_space
         Int cpu
-        Boolean use_gpu
-        Int gpuCount
-        String gpuType
-        String nvidiaDriverVersion
         String docker
         Int preemptible
         Array[String] zones
@@ -106,37 +91,9 @@ task run_spectra_model {
         import json
         import scipy
         import pickle
-        from spectra import spectra_gpu as spc
+        from spectra import spectra as spc
         from spectra import spectra_util as util
         from spectra import K_est as kst
-        import torch
-
-        # check if gpu is detected
-        # Check if CUDA is available
-        if torch.cuda.is_available():
-            print("CUDA is available", flush=True)
-
-            # Get the number of available GPUs
-            num_gpus = torch.cuda.device_count()
-            print(f"Number of available GPUs: {num_gpus}", flush=True)
-
-            # Get the name and memory status of each available GPU
-            for i in range(num_gpus):
-                gpu_name = torch.cuda.get_device_name(i)
-                print(f"GPU {i}: {gpu_name}", flush=True)
-
-                # Get the memory information
-                gpu_memory = torch.cuda.get_device_properties(i).total_memory
-                gpu_memory_allocated = torch.cuda.memory_allocated(i)
-                gpu_memory_cached = torch.cuda.memory_cached(i)
-                gpu_memory_free = gpu_memory - gpu_memory_allocated - gpu_memory_cached
-
-                print(f"\tTotal Memory: {gpu_memory / 1024**3:.2f} GB")
-                print(f"\tAllocated Memory: {gpu_memory_allocated / 1024**3:.2f} GB")
-                print(f"\tCached Memory: {gpu_memory_cached / 1024**3:.2f} GB")
-                print(f"\tFree Memory: {gpu_memory_free / 1024**3:.2f} GB", flush=True)
-        else:
-            print("CUDA is not available", flush=True)
 
         with open("~{gene_dict_json_file}", 'rb') as file:
             annotations = json.load(file)
@@ -156,15 +113,13 @@ task run_spectra_model {
         use_cell_types = ~{true='True' false='False' use_cell_types}
         n_top_vals = ~{n_top_vals}
         num_epochs = ~{num_epochs}
-        batch_size = ~{batch_size}
 
         model = spc.est_spectra(adata = adata, gene_set_dictionary = annotations, 
                         use_highly_variable = use_hvgs, cell_type_key = cell_type_key, 
                         use_weights = use_weights, lam = lam, 
                         delta=delta, kappa = kappa, rho = rho, 
                         use_cell_types = use_cell_types, n_top_vals = n_top_vals, 
-                        num_epochs=num_epochs, batch_size=batch_size
-                       )
+                        num_epochs=num_epochs)
 
         with open('outputs/spectra_model.pickle', 'wb') as f:
             pickle.dump(model, f, pickle.HIGHEST_PROTOCOL)
@@ -187,10 +142,6 @@ task run_spectra_model {
         bootDiskSizeGb: 12
         disks: "local-disk " + (ceil(size(anndata_file, "GB")*4) + extra_disk_space) + " HDD"
         cpu: cpu
-        gpu: use_gpu
-        gpuType: gpuType
-        gpuCount: gpuCount
-        nvidiaDriverVersion: nvidiaDriverVersion
         preemptible: preemptible
         zones: zones
     }
